@@ -111,6 +111,72 @@ func Login(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})
 }
 
+func Update(c *gin.Context) {
+	id := c.Param("id")
+
+	var body struct {
+		ID       int64 `gorm:"primaryKey"`
+		Username string
+		Email    string `gorm:"unique"`
+		Password string
+	}
+
+	if c.Bind(&body) != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Failed to read body",
+		})
+
+		return
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), 10)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Failed to hash password",
+		})
+
+		return
+	}
+
+	user := models.User{ID: body.ID, Username: body.Username, Email: body.Email, Password: string(hash)}
+
+	database.DB.First(&user, id)
+
+	result := database.DB.Model(&user).Updates(models.User{
+		ID:       body.ID,
+		Username: body.Username,
+		Email:    body.Email,
+		Password: string(hash),
+	})
+
+	if result.Error != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Failed to update user",
+		})
+
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{})
+}
+
+func Delete(c *gin.Context) {
+	id := c.Param("id")
+
+	result := database.DB.Delete(&models.User{}, id)
+
+	if result.Error != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Failed to delete user",
+		})
+
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{})
+}
+
 func Validate(c *gin.Context) {
 	user, _ := c.Get("user")
 

@@ -17,8 +17,10 @@ func init() {
 
 func main() {
 	r := gin.Default()
-	r.POST("/registrasi", controllers.Register)
-	r.POST("/login", controllers.Login)
-	r.GET("/validate", middlewares.RequireAuth, controllers.Validate)
+	r.POST("/users/register", controllers.Register)
+	r.POST("/users/login", controllers.Login)
+	r.GET("/users/validate", middlewares.RequireAuth, controllers.Validate)
+	r.PUT("/users/:id", controllers.Update)
+	r.DELETE("/users/:id", controllers.Delete)
 	r.Run()
 }
